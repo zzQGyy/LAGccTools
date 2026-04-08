@@ -1,13 +1,17 @@
 [submodule "src/la32r_gcc-8.3.0"]
 	path = src/la32r_gcc-8.3.0
 	url = https://gitee.com/loongson-edu/la32r_gcc-8.3.0.git
+	ignore = dirty
 [submodule "src/la32r_glibc-2.28"]
 	path = src/la32r_glibc-2.28
 	url = https://gitee.com/loongson-edu/la32r_glibc-2.28.git
+	ignore = dirty
 [submodule "src/la32r_binutils"]
 	path = src/la32r_binutils
 	url = https://gitee.com/loongson-edu/la32r_binutils.git
+	ignore = dirty
 [submodule "src/la32r-Linux"]
 	path = src/la32r-Linux
 	url = https://gitee.com/loongson-edu/la32r-Linux.git
 	shallow = true
+	ignore = dirty

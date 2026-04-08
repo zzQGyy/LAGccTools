@@ -1,20 +1,23 @@
 #!/bin/bash
+set -euo pipefail
 
-workdir=`pwd`
+workdir="$(pwd)"
 
-BUILD_SYSTEM=mips64el-linux-gnuabi64
-TOOLCHAIN_NAME=loongarch32r-linux-gnusf
-INSTALL_ROOT=$workdir/install
-TARGET_SYSROOT=$INSTALL_ROOT/sysroot
-SRC_DIR=$workdir/src
-OBJ_DIR=$workdir/obj
+BUILD_SYSTEM="${BUILD_SYSTEM:-$(gcc -dumpmachine 2>/dev/null || echo x86_64-linux-gnu)}"
+TOOLCHAIN_NAME="${TOOLCHAIN_NAME:-loongarch32r-linux-gnusf}"
+INSTALL_ROOT="${INSTALL_ROOT:-$workdir/install}"
+TARGET_SYSROOT="${TARGET_SYSROOT:-$INSTALL_ROOT/sysroot}"
+SRC_DIR="${SRC_DIR:-$workdir/src}"
+OBJ_DIR="${OBJ_DIR:-$workdir/obj}"
+JOBS="${JOBS:-$(nproc)}"
+MAKEINFO_BIN="${MAKEINFO_BIN:-true}"
 echo "========= la32r_binutils ================"
 rm -rf $OBJ_DIR/la32r_binutils_for_build_linux_gnu
 mkdir -p $OBJ_DIR/la32r_binutils_for_build_linux_gnu
 pushd $OBJ_DIR/la32r_binutils_for_build_linux_gnu
 $SRC_DIR/la32r_binutils/configure -target=${TOOLCHAIN_NAME} --prefix=$INSTALL_ROOT --disable-werror --disable-gdb
-make -j`nproc`
-make install-strip -j`nproc`
+make MAKEINFO="${MAKEINFO_BIN}" -j"${JOBS}"
+make MAKEINFO="${MAKEINFO_BIN}" install-strip -j"${JOBS}"
 popd
 
 echo "========= gcc first ================"
@@ -44,15 +47,15 @@ $SRC_DIR/la32r_gcc-8.3.0/configure \
 --with-as="$INSTALL_ROOT/bin/${TOOLCHAIN_NAME}-as" \
 --with-ar="$INSTALL_ROOT/bin/${TOOLCHAIN_NAME}-ar" \
 --with-ld="$INSTALL_ROOT/bin/${TOOLCHAIN_NAME}-ld"
-make -j`nproc` V=1 2>&1|tee build.log
-make install-strip -j`nproc`
+make MAKEINFO="${MAKEINFO_BIN}" -j"${JOBS}" V=1 2>&1|tee build.log
+make MAKEINFO="${MAKEINFO_BIN}" install-strip -j"${JOBS}"
 pushd $INSTALL_ROOT/lib/gcc/${TOOLCHAIN_NAME}/8.3.0
 popd
 popd
 
 echo "========= install kernel header ================"
 pushd $SRC_DIR/la32r-Linux
-make -j`nproc` ARCH=loongarch INSTALL_HDR_PATH="$TARGET_SYSROOT/usr" headers_install
+make -j"${JOBS}" ARCH=loongarch INSTALL_HDR_PATH="$TARGET_SYSROOT/usr" headers_install
 popd
 
 echo "========= glibc ================"
@@ -74,7 +77,7 @@ CFLAGS="-O3" \
 CXX="$INSTALL_ROOT/bin/${TOOLCHAIN_NAME}-g++" \
 AR="$INSTALL_ROOT/bin/${TOOLCHAIN_NAME}-ar" \
 AS="$INSTALL_ROOT/bin/${TOOLCHAIN_NAME}-as"
-make -j`nproc` 2>&1|tee build_glibc.log
+make MAKEINFO="${MAKEINFO_BIN}" -j"${JOBS}" 2>&1|tee build_glibc.log
 make install install_root=$TARGET_SYSROOT
 popd
 
@@ -95,6 +98,6 @@ $SRC_DIR/la32r_gcc-8.3.0/configure \
 --prefix=$INSTALL_ROOT \
 --with-sysroot=$TARGET_SYSROOT \
 --with-build-time-tools=$INSTALL_ROOT/${TOOLCHAIN_NAME}/bin
-make -j`nproc` 2>&1|tee build.log
-make install-strip -j`nproc`
+make MAKEINFO="${MAKEINFO_BIN}" -j"${JOBS}" 2>&1|tee build.log
+make MAKEINFO="${MAKEINFO_BIN}" install-strip -j"${JOBS}"
 popd

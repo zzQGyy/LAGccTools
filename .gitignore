@@ -1,0 +1,2 @@
+# Keep the reusable binary toolchain, but ignore local rebuild intermediates.
+obj/
